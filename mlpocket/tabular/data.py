@@ -95,7 +95,7 @@ def get_nan_stats(df: pd.DataFrame):
     print("\nPrinting percentage of NaN values per columns")
     for col in df.columns:
         tmp = df[col].apply(lambda x: 1 if pd.isnull(x) else 0)
-        print(f"{col}: ", tmp.mean(), f"{tmp.sum()} columns")
+        print(f"{col}: ", tmp.mean(), f"{tmp.sum()}/{len(df)} columns")
 
     return df[df.isna().any(axis=1)]
 
@@ -119,8 +119,9 @@ def plot_columns_dist(df: pd.DataFrame,
     columns_to_use = list(filter(lambda x: x in columns, new_df.columns) if columns else new_df.columns)
 
     fig, axes = plt.subplots(nrows=(len(columns_to_use) // 4) + 1, ncols=4)  # axes is 2d array (3x3)
+    fig.tight_layout()
+    fig.set_size_inches(25, 25)
     axes = axes.flatten()  # Convert axes to 1d array of length 9
-    fig.set_size_inches(20, 20)
 
     for ax, col in zip(axes[:len(columns_to_use)], columns_to_use):
         sns.histplot(new_df[col], ax=ax, kde=True, color='forestgreen')

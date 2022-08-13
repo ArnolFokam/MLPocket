@@ -157,6 +157,48 @@ def to_isnull(df: pd.DataFrame,
     return df
 
 
+def to_dummies(
+        train_df: pd.DataFrame,
+        test_df: pd.DataFrame,
+        columns: List[str],
+        delete_input_col: bool = False,):
+    """
+    Transform categorical values to dummy columns
+
+    :param train_df: train dataframe to use
+    :param test_df: test dataframe to use
+    :param columns: columns to transform
+    :param delete_input_col:  should we delete the input column?
+
+    :return: preprocessed dataframe
+    """
+
+    train_df = train_df.copy()
+    test_df = test_df.copy()
+
+    all_columns = set(train_df.columns).union(test_df.columns)
+
+    for column in columns:
+
+        if column in all_columns:
+            # convert to string
+            train_df[column] = train_df[column].apply(lambda x: str(x))
+            test_df[column] = test_df[column].apply(lambda x: str(x))
+
+            # in case we have categories not present in the test dataframe
+            good_cols = [column + '_' + i for i in train_df[column].unique() if i in test_df[column].unique()]
+
+            # at the dummies
+            train_df = pd.concat((train_df, pd.get_dummies(train_df[column], prefix=column)[good_cols]), axis=1)
+            test_df = pd.concat((test_df, pd.get_dummies(test_df[column], prefix=column)[good_cols]), axis=1)
+
+            if delete_input_col:
+                del train_df[column]
+                del test_df[column]
+
+    return train_df, test_df
+
+
 def to_fill_by_group(df: pd.DataFrame,
                      input_col: str,
                      out_col: str,
