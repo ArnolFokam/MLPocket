@@ -1,0 +1,1 @@
+This folder should contain our processed data (feature engineering, cleaning etc).
