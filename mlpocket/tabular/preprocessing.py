@@ -158,45 +158,35 @@ def to_isnull(df: pd.DataFrame,
 
 
 def to_dummies(
-        train_df: pd.DataFrame,
-        test_df: pd.DataFrame,
+        train: pd.DataFrame,
+        val: pd.DataFrame,
         columns: List[str],
-        delete_input_col: bool = False,):
+        delete_input_col: bool = False):
     """
     Transform categorical values to dummy columns
 
-    :param train_df: train dataframe to use
-    :param test_df: test dataframe to use
+    :param train: train dataframe to use
+    :param val: test dataframe to use
     :param columns: columns to transform
     :param delete_input_col:  should we delete the input column?
 
     :return: preprocessed dataframe
     """
 
-    train_df = train_df.copy()
-    test_df = test_df.copy()
+    train = train.copy()
+    val = val.copy()
 
-    all_columns = set(train_df.columns).union(test_df.columns)
+    train = pd.get_dummies(train, columns=columns)
+    val = pd.get_dummies(val, columns=columns)
 
-    for column in columns:
+    # columns are not currently the same, concat so that they are
+    train_val = pd.concat([train, val]).fillna(0)  # creates some empty columns, fill these with 0's
 
-        if column in all_columns:
-            # convert to string
-            train_df[column] = train_df[column].apply(lambda x: str(x))
-            test_df[column] = test_df[column].apply(lambda x: str(x))
+    # extract train and val again
+    train = train_val.iloc[0:len(train)]
+    val = train_val.iloc[len(train):]
 
-            # in case we have categories not present in the test dataframe
-            good_cols = [column + '_' + i for i in train_df[column].unique() if i in test_df[column].unique()]
-
-            # at the dummies
-            train_df = pd.concat((train_df, pd.get_dummies(train_df[column], prefix=column)[good_cols]), axis=1)
-            test_df = pd.concat((test_df, pd.get_dummies(test_df[column], prefix=column)[good_cols]), axis=1)
-
-            if delete_input_col:
-                del train_df[column]
-                del test_df[column]
-
-    return train_df, test_df
+    return train, val
 
 
 def to_fill_by_group(df: pd.DataFrame,
